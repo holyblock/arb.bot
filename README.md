@@ -15,15 +15,21 @@ This project is an arbitrage bot that interacts with the 1inch API and a Solidit
 - `ding.mp3`: Sound file (likely used for notifications).
 - `package.json`: Project dependencies and scripts.
 - `TradingBot.sol`: Solidity smart contract for managing trades.
-- `yk0pt9jw21kfmcydtj9n-ezgif.com-cut.gif`: GIF file demonstrating the app in action.
 
 ## Challenges and Solutions
 
-### 1. API Integration and Rate Limits
+### 1. Real time Date API Integration and Rate Limits
 **Challenge**: Integrating with the 1inch API and handling rate limits.
 **Solution**: Implementing retry logic with exponential backoff.
 
 ```javascript
+const WebSocket = require('ws');
+const ws = new WebSocket('wss://api.1inch.io/ws');
+ws.on('message', function incoming(data) {
+    // Handle incoming data
+});
+
+
 async function fetchWithRetry(url, retries = RETRY_LIMIT) {
     for (let i = 0; i < retries; i++) {
         try {
@@ -84,27 +90,28 @@ async function findArbitrageOpportunity() {
 }
 ```
 
-### 4. Real-Time Data Accuracy
-**Challenge**: Ensuring the data used for arbitrage decisions is accurate and up-to-date.
-**Solution**: Implementing frequent data fetching and validation mechanisms.
-
-```javascript
-async function validateAndFetchPrices() {
-    const price1 = await fetchWithRetry(`${API_URL}/price1`);
-    const price2 = await fetchWithRetry(`${API_URL}/price2`);
-    if (price1 && price2) {
-        return { price1, price2 };
-    } else {
-        throw new Error('Invalid prices fetched');
-    }
-}
-```
-
-### 5. Smart Contract Security
+### 4. Smart Contract Security
 **Challenge**: Ensuring the security of the smart contract to prevent exploits.
 **Solution**: Implementing proper access controls and thorough testing.
 
 ```solidity
+// In TradingBot.sol
+pragma solidity ^0.8.0;
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+contract TradingBot is ReentrancyGuard {
+    function safeTransfer(address token, address to, uint256 amount) internal {
+        require(IERC20(token).transfer(to, amount), "Transfer failed");
+    }
+
+    function executeTrade(address token, uint256 amount) external nonReentrant {
+        safeTransfer(token, msg.sender, amount);
+    }
+}
+
+...
+
 modifier onlyOwner() {
     require(msg.sender == owner, "Not the contract owner");
     _;
@@ -115,7 +122,7 @@ function executeTrade(address token1, address token2, uint256 amount) public onl
 }
 ```
 
-### 6. Transaction Speed and Gas Fees
+### 5. Transaction Speed and Gas Fees
 **Challenge**: Ensuring trades are executed quickly and efficiently without excessive gas fees.
 **Solution**: Optimizing smart contract functions and monitoring gas prices.
 
@@ -125,7 +132,7 @@ function optimizedTradeExecution(address token1, address token2, uint256 amount)
 }
 ```
 
-### 7. Exchange Reliability
+### 6. Exchange Reliability
 **Challenge**: Dealing with the reliability of exchanges and API endpoints.
 **Solution**: Implementing fallback mechanisms and multiple data sources.
 
@@ -134,21 +141,6 @@ async function fetchFromMultipleSources() {
     const sources = [fetchWithRetry(`${API_URL}/price1`), fetchWithRetry(`${API_URL}/price2`)];
     const results = await Promise.allSettled(sources);
     return results.filter(result => result.status === 'fulfilled').map(result => result.value);
-}
-```
-
-### 8. Market Volatility
-**Challenge**: Handling the high volatility in cryptocurrency markets.
-**Solution**: Implementing safeguards and limits to manage risk.
-
-```javascript
-function calculateRiskAdjustedOpportunity(price1, price2) {
-    const spread = price2 - price1;
-    const volatility = // some calculation;
-    if (spread > volatility) {
-        return true; // Opportunity is worth taking
-    }
-    return false;
 }
 ```
 
