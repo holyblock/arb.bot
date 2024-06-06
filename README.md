@@ -3,7 +3,9 @@
 
 This project is an arbitrage bot that interacts with the 1inch API and a Solidity smart contract to perform arbitrage trading. The bot identifies price discrepancies between different exchanges and executes trades to exploit these opportunities.
 
-![Arbitrage Bot Demo](yk0pt9jw21kfmcydtj9n-ezgif.com-cut.gif)
+<div style="text-align: center;">
+    <img src="yk0pt9jw21kfmcydtj9n-ezgif.com-cut.gif" alt="Arbitrage Bot Demo">
+</div>
 
 ## Project Structure
 
